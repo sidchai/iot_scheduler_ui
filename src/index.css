@@ -1,0 +1,481 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局基础：与 shadcn/ui 默认 reset 对齐 */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+  body {
+    /*
+     * Tailwind 的 @apply 对 bg-bg 这类短 token 在 Vite/PostCSS 热更新中可能解析失败。
+     * 这里改用原生 CSS 固定 RFC-05 的页面基础色与字体，避免开发服务器因 utility 生成失败中断。
+     */
+    background: #fafafa;
+    color: #09090b;
+    font-family:
+      Inter,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'PingFang SC',
+      'Hiragino Sans GB',
+      'Microsoft YaHei',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 与 RFC-05 原型 L51 一致：开启 Inter 的高级字体特性 + 收紧字距 */
+    font-feature-settings:
+      'cv11',
+      'ss01',
+      'ss03';
+    letter-spacing: -0.01em;
+  }
+  /* 与原型 L52 一致：等宽场景统一字体 */
+  code,
+  pre,
+  kbd {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+/* 自定义滚动条：与 RFC-05 原型 L222-L225 对齐 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e4e4e7;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4d4d8;
+}
+
+/* =====================================================================
+ * RFC-05 原型组件类
+ *
+ * 这些类完全照抄 docs/rfc/05_ui_prototype.html 内联 <style>，
+ * 让新页面用 className="card" / "btn btn-primary" 等就能 1:1 复刻原型视觉。
+ * 不动 shadcn/ui 既有组件，两套并行直到旧页面逐步迁移。
+ * ===================================================================== */
+
+@layer components {
+  /* === 侧边导航项（与原型 .nav-item 一致） === */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    margin: 1px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #52525b;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 150ms ease;
+  }
+  .nav-item:hover {
+    background: #f4f4f5;
+    color: #18181b;
+  }
+  .nav-item.active {
+    background: #18181b;
+    color: white;
+  }
+  .nav-item.active svg {
+    color: white;
+  }
+  .nav-item svg {
+    width: 16px;
+    height: 16px;
+    color: #71717a;
+    transition: color 150ms;
+  }
+  .nav-item:hover svg {
+    color: #18181b;
+  }
+
+  /* === 卡片 === */
+  .ui-card {
+    background: white;
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    transition:
+      box-shadow 200ms ease,
+      border-color 200ms ease;
+  }
+  .ui-card-hover:hover {
+    box-shadow:
+      0 4px 12px -2px rgb(0 0 0 / 0.08),
+      0 2px 4px -2px rgb(0 0 0 / 0.04);
+    border-color: #d4d4d8;
+  }
+
+  /* === 按钮 === */
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 150ms ease;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .ui-btn:focus-visible {
+    outline: 2px solid #18181b;
+    outline-offset: 2px;
+  }
+  .ui-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .ui-btn-primary {
+    background: #18181b;
+    color: white;
+  }
+  .ui-btn-primary:hover:not(:disabled) {
+    background: #27272a;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  }
+  .ui-btn-default {
+    background: white;
+    color: #18181b;
+    border-color: #e4e4e7;
+  }
+  .ui-btn-default:hover:not(:disabled) {
+    background: #fafafa;
+    border-color: #d4d4d8;
+  }
+  .ui-btn-ghost {
+    background: transparent;
+    color: #18181b;
+  }
+  .ui-btn-ghost:hover:not(:disabled) {
+    background: #f4f4f5;
+  }
+  .ui-btn-sm {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .ui-btn-danger {
+    background: white;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+  .ui-btn-danger:hover:not(:disabled) {
+    background: #fef2f2;
+  }
+
+  /* === 表单 === */
+  .ui-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #e4e4e7;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    background: white;
+    transition: all 150ms ease;
+  }
+  .ui-input:focus {
+    border-color: #18181b;
+    box-shadow: 0 0 0 3px rgb(24 24 27 / 0.08);
+  }
+  .ui-input::placeholder {
+    color: #a1a1aa;
+  }
+  textarea.ui-input {
+    height: auto;
+    padding: 8px 12px;
+    resize: vertical;
+  }
+  select.ui-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+  .ui-label {
+    display: block;
+    font-size: 13px;
+    color: #18181b;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .ui-desc {
+    font-size: 12px;
+    color: #71717a;
+  }
+
+  /* === 徽章（语义状态） === */
+  .ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.6;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .ui-badge-default {
+    background: #f4f4f5;
+    color: #52525b;
+    border-color: #e4e4e7;
+  }
+  .ui-badge-success {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+  }
+  .ui-badge-warning {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+  .ui-badge-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+  .ui-badge-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+  .ui-badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+
+  /* === 原生控件：与 RFC-05 radio / checkbox / kbd 细节一致 === */
+  input[type='radio'],
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: #18181b;
+    cursor: pointer;
+  }
+  kbd {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid #e4e4e7;
+    background: #fafafa;
+    color: #52525b;
+  }
+
+  /* === 状态点 === */
+  .ui-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ui-dot-success {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgb(16 185 129 / 0.18);
+  }
+  .ui-dot-warning {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgb(245 158 11 / 0.18);
+  }
+  .ui-dot-danger {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.18);
+  }
+  .ui-dot-muted {
+    background: #a1a1aa;
+    box-shadow: 0 0 0 3px rgb(161 161 170 / 0.18);
+  }
+
+  /* === 表格（与原型 .tbl 一致） === */
+  .ui-tbl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ui-tbl thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #71717a;
+    border-bottom: 1px solid #e4e4e7;
+    background: white;
+    white-space: nowrap;
+  }
+  .ui-tbl tbody td {
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: #18181b;
+    border-bottom: 1px solid #f4f4f5;
+  }
+  .ui-tbl tbody tr {
+    transition: background 120ms ease;
+  }
+  .ui-tbl tbody tr:hover {
+    background: #fafafa;
+  }
+  .ui-tbl tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* === 表格内链接按钮 === */
+  .ui-link {
+    color: #18181b;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 120ms ease;
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+  .ui-link:hover {
+    color: #2563eb;
+  }
+  .ui-link-danger {
+    color: #71717a;
+  }
+  .ui-link-danger:hover {
+    color: #ef4444;
+  }
+
+  /* === Tab 切换 === */
+  .ui-tab-btn {
+    padding: 10px 0;
+    margin-right: 24px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: #71717a;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 150ms ease;
+    background: none;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+  .ui-tab-btn:hover {
+    color: #18181b;
+  }
+  .ui-tab-btn.active {
+    color: #18181b;
+    border-bottom-color: #18181b;
+  }
+
+  /* === 步骤条（向导用） === */
+  .ui-stepper {
+    display: flex;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid #f4f4f5;
+    background: #fafafa;
+  }
+  .ui-stepper-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a1a1aa;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .ui-stepper-item.active {
+    color: #18181b;
+  }
+  .ui-stepper-item.done {
+    color: #10b981;
+  }
+  .ui-stepper-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1.5px solid currentColor;
+  }
+  .ui-stepper-item.active .ui-stepper-circle {
+    background: #18181b;
+    color: white;
+    border-color: #18181b;
+  }
+  .ui-stepper-item.done .ui-stepper-circle {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+  }
+  .ui-stepper-line {
+    flex: 1;
+    height: 1px;
+    background: #e4e4e7;
+    margin: 0 12px;
+  }
+  .ui-stepper-item.done + .ui-stepper-line {
+    background: #10b981;
+  }
+
+  /* === 时间线（Run 详情、审计用） === */
+  .ui-timeline {
+    position: relative;
+    padding-left: 22px;
+  }
+  .ui-timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: #e4e4e7;
+  }
+  .ui-timeline-item {
+    position: relative;
+    padding-bottom: 14px;
+  }
+  .ui-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -19px;
+    top: 4px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #18181b;
+  }
+  .ui-timeline-item.success::before {
+    border-color: #10b981;
+    background: #10b981;
+  }
+  .ui-timeline-item.error::before {
+    border-color: #ef4444;
+    background: #ef4444;
+  }
+}
