@@ -14,13 +14,7 @@ import { JobForm } from '@/components/JobForm';
 import { formatUnix } from '@/lib/utils';
 import type { Job, TriggerType } from '@/types/api';
 
-/**
- * 把 proto enum 字符串 TRIGGER_TYPE_CRON 显示为简短 cron。
- *
- * 后端 protojson 默认编码 enum 为全名字符串；UI 显示去前缀更清爽。
- */
 function triggerLabel(t: TriggerType): string {
-  // 中文映射，未知枚举降级为去前缀小写
   switch (t) {
     case 'TRIGGER_TYPE_CRON':
       return 'Cron';
@@ -39,7 +33,6 @@ function triggerLabel(t: TriggerType): string {
   }
 }
 
-// 任务启用后的状态文本：proto 返回的 status 是 DB enum（running/idle/paused…）
 function statusLabel(s: string): string {
   switch (s) {
     case 'running':
@@ -55,21 +48,14 @@ function statusLabel(s: string): string {
   }
 }
 
-/**
- * 任务列表页：分页表格 + app_name/keyword 过滤。
- *
- * 创建/暂停/触发等运维操作留待 P0+ Dialog 组件接入后实现。
- */
 export default function JobsPage() {
   const qc = useQueryClient();
   const toast = useToast();
-  // URL ?app=xxx 可从应用管理页跳转过来预填过滤
   const [sp, setSp] = useSearchParams();
   const [appName, setAppName] = useState(sp.get('app') || '');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
 
-  // URL 变化时（如用户手动改地址栏或从别处跳进来）同步 state
   useEffect(() => {
     const next = sp.get('app') || '';
     if (next !== appName) {
@@ -79,7 +65,6 @@ export default function JobsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
 
-  // 应用下拉列表，缓存 60s，失败不阻塞主流程
   const appsQ = useQuery({
     queryKey: ['appsForJobsFilter'],
     queryFn: () => appApi.list(),
@@ -147,14 +132,14 @@ export default function JobsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between gap-3">
+      <div className="mb-8 flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-semibold leading-tight">任务管理</h1>
-          <p className="mt-1 text-[13px] text-fg-muted">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">任务管理</h1>
+          <p className="mt-1.5 text-[13px] text-fg-muted">
             {total} 个任务 · 第 {page}/{totalPages} 页
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <select
             className="ui-input w-40"
             value={appName}
@@ -162,7 +147,6 @@ export default function JobsPage() {
               const v = e.target.value;
               setAppName(v);
               setPage(1);
-              // 同步 URL，便于刷新/分享保持筛选
               if (v) {
                 setSp({ app: v });
               } else {
@@ -178,7 +162,7 @@ export default function JobsPage() {
             ))}
           </select>
           <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-subtle" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
             <Input
               placeholder="任务名 / 描述"
               value={keyword}
@@ -186,23 +170,23 @@ export default function JobsPage() {
                 setKeyword(e.target.value);
                 setPage(1);
               }}
-              className="pl-8"
+              className="pl-10"
             />
           </div>
           <Button onClick={openCreate}>
-            <Plus className="h-3.5 w-3.5" /> 新建任务
+            <Plus className="h-4 w-4" /> 新建任务
           </Button>
         </div>
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader className="border-b border-border p-4">
+        <CardHeader className="border-b border-border px-5 py-4">
           <CardTitle>任务列表</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {jobs.isLoading && <div className="p-10 text-center text-[13px] text-fg-muted">加载中…</div>}
+          {jobs.isLoading && <div className="p-12 text-center text-[13px] text-fg-muted">加载中...</div>}
           {jobs.isError && (
-            <div className="p-10 text-center text-[13px] text-danger">加载失败：{extractError(jobs.error)}</div>
+            <div className="p-12 text-center text-[13px] text-danger">加载失败：{extractError(jobs.error)}</div>
           )}
           {jobs.data && jobs.data.jobs.length === 0 && (
             <div className="py-12 text-center text-[13px] text-fg-muted">
@@ -228,12 +212,12 @@ export default function JobsPage() {
                   <tbody>
                     {jobs.data.jobs.map((j) => (
                       <tr key={j.id}>
-                        <td className="font-medium">{j.job_name}</td>
+                        <td className="font-medium text-fg">{j.job_name}</td>
                         <td className="text-fg-muted">{j.app_name}</td>
                         <td>
                           <Badge variant="outline">{triggerLabel(j.trigger_type)}</Badge>
                         </td>
-                        <td className="font-mono text-[12px]">
+                        <td className="font-mono text-[12px] text-fg-muted">
                           {j.trigger_type === 'TRIGGER_TYPE_CRON'
                             ? j.cron_expr
                             : j.trigger_type === 'TRIGGER_TYPE_FIXED_RATE'
@@ -315,11 +299,6 @@ export default function JobsPage() {
   );
 }
 
-/**
- * 极简分页：上一页/下一页按钮 + 当前页码。
- *
- * 列表页通用，避免每页重复造轮子；不做跳页输入框（P1）。
- */
 function Pagination({
   page,
   totalPages,
@@ -331,7 +310,7 @@ function Pagination({
 }) {
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-3 text-[12.5px] text-fg-muted">
+    <div className="flex items-center justify-between border-t border-border px-5 py-4 text-[13px] text-fg-muted">
       <span>
         第 {page} / {totalPages} 页
       </span>

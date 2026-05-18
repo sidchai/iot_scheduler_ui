@@ -2,23 +2,21 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-// 按钮变体定义：保留 shadcn 调用 API，视觉统一切到 RFC-05 原型按钮体系。
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-[6px] whitespace-nowrap rounded-md border border-transparent text-[13px] font-medium transition-all duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent text-[13px] font-medium transition-all duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-white hover:bg-zinc-800 hover:shadow-[0_1px_3px_rgb(0_0_0_/_0.12)]',
-        destructive:
-          'border-red-200 bg-white text-red-700 hover:bg-danger-bg hover:text-red-700',
-        outline:
-          'border-border bg-white text-primary hover:bg-bg hover:border-border-strong',
-        ghost: 'text-primary hover:bg-hover',
+        default: 'bg-fg text-bg hover:bg-fg/90',
+        destructive: 'border-danger/30 bg-danger-bg text-danger hover:bg-danger/20',
+        outline: 'border-border bg-card text-fg hover:bg-bg-muted hover:border-border-strong',
+        ghost: 'text-fg hover:bg-bg-muted',
+        secondary: 'bg-bg-muted text-fg hover:bg-border',
       },
       size: {
-        sm: 'h-7 px-2.5 text-[12px]',
-        default: 'h-[34px] px-3.5',
-        lg: 'h-10 px-5 text-[13.5px]',
+        sm: 'h-8 px-3 text-[12px]',
+        default: 'h-9 px-4',
+        lg: 'h-11 px-6 text-[14px]',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

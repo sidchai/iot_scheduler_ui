@@ -10,12 +10,6 @@ import { AppForm, SecretDisplay } from '@/components/AppForm';
 import { cn } from '@/lib/utils';
 import type { App } from '@/types/api';
 
-/**
- * 应用列表页：以 RFC-05 图 2 为主，展示应用标识、负责人、Worker/Job 汇总与行级操作。
- *
- * Worker / Job 数量不是 App 接口字段，所以页面额外读取现有列表接口按 app_name 聚合，
- * 确保视觉对齐原型的同时不改后端契约；聚合接口失败时仅展示短横线，不影响应用管理主流程。
- */
 export default function AppsPage() {
   const qc = useQueryClient();
   const toast = useToast();
@@ -117,34 +111,34 @@ export default function AppsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-8 flex items-end justify-between">
         <div>
-          <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">应用管理</h1>
-          <p className="mt-1 text-[13px] text-fg-muted">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">应用管理</h1>
+          <p className="mt-1.5 text-[13px] text-fg-muted">
             已注册的业务方应用 · 共 {apps.data?.length ?? 0} 个
           </p>
         </div>
-        <Button onClick={openCreate} className="h-9 rounded-md bg-zinc-950 px-4 text-[13px] hover:bg-zinc-800">
-          <Plus className="h-3.5 w-3.5" /> 新建应用
+        <Button onClick={openCreate}>
+          <Plus className="h-4 w-4" /> 新建应用
         </Button>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-border bg-white shadow-sm-card">
-        <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-4">
+      <div className="ui-card overflow-hidden">
+        <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="relative w-[360px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-subtle" />
+            <div className="relative w-80">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="搜索 appName..."
-                className="ui-input pl-9"
+                className="ui-input pl-10"
               />
             </div>
             <select
               value={enabledFilter}
               onChange={(e) => setEnabledFilter(e.target.value)}
-              className="ui-input w-[160px]"
+              className="ui-input w-36"
             >
               <option value="all">全部状态</option>
               <option value="enabled">启用</option>
@@ -154,7 +148,7 @@ export default function AppsPage() {
           <span className="text-[12px] text-fg-muted">{filteredApps.length} 个应用</span>
         </div>
 
-        {apps.isLoading && <div className="p-12 text-center text-[13px] text-fg-muted">加载中…</div>}
+        {apps.isLoading && <div className="p-12 text-center text-[13px] text-fg-muted">加载中...</div>}
         {apps.isError && (
           <div className="p-12 text-center text-[13px] text-danger">加载失败：{extractError(apps.error)}</div>
         )}
@@ -165,7 +159,7 @@ export default function AppsPage() {
           <table className="ui-tbl">
             <thead>
               <tr>
-                <th className="w-[300px]">应用</th>
+                <th className="w-72">应用</th>
                 <th>负责人</th>
                 <th>Worker</th>
                 <th>Job</th>
@@ -184,14 +178,14 @@ export default function AppsPage() {
                       <div className="flex items-center gap-3">
                         <AppIcon index={index} appName={app.app_name} />
                         <div className="min-w-0">
-                          <div className="truncate font-semibold text-fg">{app.app_name}</div>
+                          <div className="truncate font-medium text-fg">{app.app_name}</div>
                           <div className="mt-0.5 truncate text-[12px] text-fg-muted">
-                            {app.description || app.webhook_url || 'core api · 业务方应用'}
+                            {app.description || app.webhook_url || '业务方应用'}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="text-fg">{app.owner || '-'}</td>
+                    <td className="text-fg-muted">{app.owner || '-'}</td>
                     <td>
                       {worker ? (
                         <span className="inline-flex items-center gap-2 text-fg">
@@ -199,14 +193,13 @@ export default function AppsPage() {
                           {worker.online} / {worker.total}
                         </span>
                       ) : (
-                        <span className="text-fg-muted">-</span>
+                        <span className="text-fg-subtle">-</span>
                       )}
                     </td>
                     <td>
                       {(() => {
                         const n = jobCountByApp[app.app_name] ?? 0;
-                        if (n === 0) return <span className="text-fg-muted">0</span>;
-                        // 任务数带链接跳转到任务管理并预填应用过滤
+                        if (n === 0) return <span className="text-fg-subtle">0</span>;
                         return (
                           <Link
                             to={`/jobs?app=${encodeURIComponent(app.app_name)}`}
@@ -218,15 +211,15 @@ export default function AppsPage() {
                         );
                       })()}
                     </td>
-                    <td>{app.qps_quota.toLocaleString('zh-CN')}/s</td>
-                    <td>{Math.round(app.payload_max_bytes / 1024)} KB</td>
-                    <td>{formatShortDate(app.created_at)}</td>
+                    <td className="text-fg-muted">{app.qps_quota.toLocaleString('zh-CN')}/s</td>
+                    <td className="text-fg-muted">{Math.round(app.payload_max_bytes / 1024)} KB</td>
+                    <td className="text-fg-muted">{formatShortDate(app.created_at)}</td>
                     <td className="text-right">
-                      <div className="flex items-center justify-end gap-4">
-                        <button className="text-[13px] font-medium text-fg hover:text-accent" onClick={() => openEdit(app)}>
+                      <div className="flex items-center justify-end gap-3">
+                        <button className="text-[13px] font-medium text-fg-muted hover:text-accent" onClick={() => openEdit(app)}>
                           编辑
                         </button>
-                        <button className="text-[13px] font-medium text-fg hover:text-accent" onClick={() => setResetTarget(app)}>
+                        <button className="text-[13px] font-medium text-fg-muted hover:text-accent" onClick={() => setResetTarget(app)}>
                           重置 Secret
                         </button>
                         <RowMenu
@@ -241,7 +234,7 @@ export default function AppsPage() {
             </tbody>
           </table>
         )}
-      </section>
+      </div>
 
       {formOpen && (
         <AppForm
@@ -267,7 +260,7 @@ export default function AppsPage() {
         open={!!disableTarget}
         onOpenChange={(v) => !v && setDisableTarget(null)}
         title={`禁用应用 ${disableTarget?.app_name}？`}
-        description="禁用后该应用的 SDK 无法新建连接，已在线 worker 会被踢出（P1）。可随时通过编辑重新启用。"
+        description="禁用后该应用的 SDK 无法新建连接，已在线 worker 会被踢出。可随时通过编辑重新启用。"
         confirmText="禁用"
         loading={disableMutation.isPending}
         onConfirm={() => disableTarget && disableMutation.mutate(disableTarget.app_name)}
@@ -305,30 +298,27 @@ function formatShortDate(ts?: number | null): string {
 
 function AppIcon({ index, appName }: { index: number; appName: string }) {
   const iconStyles = [
-    'border-zinc-200 bg-zinc-100 text-zinc-700',
-    'border-blue-200 bg-blue-50 text-blue-600',
-    'border-emerald-200 bg-emerald-50 text-emerald-600',
-    'border-orange-200 bg-orange-50 text-orange-600',
-    'border-sky-200 bg-sky-50 text-sky-600',
+    'bg-blue-500/10 text-blue-400',
+    'bg-emerald-500/10 text-emerald-400',
+    'bg-violet-500/10 text-violet-400',
+    'bg-amber-500/10 text-amber-400',
+    'bg-rose-500/10 text-rose-400',
   ];
   const icons = [Cloud, Globe2, Cpu, Radio, Cloud];
   const Icon = icons[index % icons.length];
   return (
     <div
       className={cn(
-        'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md border',
+        'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
         iconStyles[index % iconStyles.length],
       )}
       title={appName}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-5 w-5" />
     </div>
   );
 }
 
-/**
- * RowMenu：保留低频危险操作，主行只暴露图 2 中的编辑 / 重置 Secret。
- */
 function RowMenu({ onDisable, onDelete }: { onDisable?: () => void; onDelete: () => void }) {
   const close = (e: MouseEvent) => {
     const details = (e.currentTarget as HTMLElement).closest('details');
@@ -336,10 +326,10 @@ function RowMenu({ onDisable, onDelete }: { onDisable?: () => void; onDelete: ()
   };
   return (
     <details className="relative inline-block text-left">
-      <summary className="list-none cursor-pointer rounded-md p-1 text-fg-muted transition hover:bg-hover hover:text-fg">
+      <summary className="list-none cursor-pointer rounded-lg p-1.5 text-fg-muted transition hover:bg-bg-muted hover:text-fg">
         <MoreHorizontal className="h-4 w-4" />
       </summary>
-      <div className="absolute right-0 z-10 mt-1 w-28 rounded-md border border-border bg-white py-1 shadow-menu">
+      <div className="absolute right-0 z-10 mt-1 w-28 rounded-lg border border-border bg-card py-1 shadow-menu">
         {onDisable && (
           <MenuItem
             onClick={(e) => {
@@ -376,7 +366,7 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      className={`block w-full px-3 py-1.5 text-left text-[13px] text-fg transition hover:bg-hover ${className || ''}`}
+      className={`block w-full px-3 py-2 text-left text-[13px] text-fg transition hover:bg-bg-muted ${className || ''}`}
     >
       {children}
     </button>

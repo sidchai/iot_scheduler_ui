@@ -12,24 +12,13 @@ import {
   ShieldCheck,
   CalendarClock,
   BookOpen,
-  ChevronUp,
+  LogOut,
   Search,
+  Settings,
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { cn } from '@/lib/utils';
-
-/**
- * 主布局：左侧固定侧边栏 + 顶部 sticky bar + 内容区。
- *
- * 视觉对齐 docs/rfc/05_ui_prototype.html 原型：
- *   - 侧边栏 232px，分三组（主控制台/运维/系统）
- *   - 顶部 bar 含 breadcrumb（按路由动态生成）、文档入口、env 徽章、消息铃铛
- *   - 底部用户卡：头像 + 用户名 + 角色，点击退出登录
- *   - .nav-item 类来自 index.css（@layer components），跟原型 1:1
- *
- * 路由层用 <Outlet /> 渲染当前页；ProtectedRoute 已在 router 层拦截未登录用户。
- */
 
 interface NavItem {
   to: string;
@@ -43,7 +32,6 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// 导航分组：与原型 L274-L287 完全对齐
 const navGroups: NavGroup[] = [
   {
     title: '主控制台',
@@ -72,7 +60,6 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-// 把当前 path 映射为 breadcrumb 文本（与导航 label 同步）
 function getBreadcrumb(path: string): string {
   for (const g of navGroups) {
     for (const it of g.items) {
@@ -81,19 +68,15 @@ function getBreadcrumb(path: string): string {
       }
     }
   }
-  // 兼容已存在但不在分组里的旧路由
   if (path.startsWith('/alerts/bindings')) return '告警绑定';
   if (path.startsWith('/alerts/events')) return '告警事件';
   return '控制台';
 }
 
-// 从 display_name 取首字母（中文取前 2 字符；英文取首位）作为头像 fallback
 function userInitials(name: string): string {
   if (!name) return '?';
   const trimmed = name.trim();
-  // 包含中日韩字符 → 取头 2 个
   if (/[\u4e00-\u9fa5]/.test(trimmed)) return trimmed.slice(0, 2);
-  // 否则按空格切，取每段首字母
   return trimmed
     .split(/\s+/)
     .slice(0, 2)
@@ -107,7 +90,6 @@ export function Layout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  // 退出登录：清 store + 跳 /login，replace 避免后退回到老页
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
@@ -115,20 +97,19 @@ export function Layout() {
 
   const displayName = user?.display_name || user?.username || 'unknown';
   const role = user?.role?.replace('USER_ROLE_', '').toLowerCase() || '';
-  const provider = user?.sso_provider ? `${user.sso_provider}/${user.sso_subject || '-'}` : '';
 
   return (
     <div className="flex h-full overflow-hidden bg-bg text-fg">
-      {/* ========== 侧边栏 ========== */}
-      <aside className="flex w-[232px] flex-shrink-0 flex-col border-r border-border bg-white">
+      {/* 侧边栏 */}
+      <aside className="flex w-[240px] flex-shrink-0 flex-col border-r border-border bg-bg-elevated">
         {/* Logo */}
-        <div className="border-b border-border px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-900 to-zinc-700">
-              <CalendarClock className="h-4 w-4 text-white" />
+        <div className="border-b border-border px-5 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+              <CalendarClock className="h-5 w-5 text-white" />
             </div>
             <div>
-              <div className="text-[14px] font-semibold leading-tight">iot-scheduler</div>
+              <div className="text-[14px] font-semibold leading-tight text-fg">iot-scheduler</div>
               <div className="mt-0.5 text-[11px] leading-tight text-fg-subtle">
                 v0.1.0 · 控制台
               </div>
@@ -136,30 +117,30 @@ export function Layout() {
           </div>
         </div>
 
-        {/* 全局搜索占位：先对齐 RFC-05 原型的信息架构，快捷键逻辑后续接入命令面板。 */}
-        <div className="border-b border-border px-2 py-3">
+        {/* 搜索框 */}
+        <div className="border-b border-border px-3 py-3">
           <button
             type="button"
-            className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-white px-3 text-left text-[13px] text-fg-subtle transition hover:border-border-strong hover:bg-hover"
+            className="flex h-10 w-full items-center justify-between rounded-lg border border-border bg-bg-muted px-3 text-left text-[13px] text-fg-subtle transition hover:border-border-strong hover:bg-card-hover"
           >
             <span className="flex items-center gap-2">
-              <Search className="h-3.5 w-3.5" />
-              搜索任务 / 应用...
+              <Search className="h-4 w-4" />
+              搜索...
             </span>
-            <kbd className="rounded border border-border bg-hover px-1.5 py-0.5 font-mono text-[11px] text-fg-muted">
+            <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-fg-subtle">
               ⌘K
             </kbd>
           </button>
         </div>
 
         {/* 导航分组 */}
-        <nav className="flex-1 overflow-y-auto py-3">
+        <nav className="flex-1 overflow-y-auto py-4">
           {navGroups.map((g, idx) => (
             <div key={g.title}>
               <div
                 className={cn(
-                  'px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle',
-                  idx === 0 ? 'pt-2' : 'pt-4',
+                  'px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle',
+                  idx === 0 ? 'pt-1' : 'pt-6',
                 )}
               >
                 {g.title}
@@ -171,7 +152,6 @@ export function Layout() {
                     key={item.to}
                     to={item.to}
                     end={item.exact}
-                    // nav-item 类 + active 修饰由 NavLink 的 className 函数控制
                     className={({ isActive }) => cn('nav-item', isActive && 'active')}
                   >
                     <Icon />
@@ -185,62 +165,69 @@ export function Layout() {
 
         {/* 底部用户卡 */}
         <div className="border-t border-border p-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-hover"
-            title="点击退出登录"
-          >
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-[12px] font-semibold text-white">
+          <div className="mb-2 flex items-center gap-3 rounded-lg p-2">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-[12px] font-semibold text-white">
               {userInitials(displayName)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-medium leading-tight">
+              <div className="truncate text-[13px] font-medium leading-tight text-fg">
                 {displayName}
               </div>
               <div className="mt-0.5 truncate text-[11px] leading-tight text-fg-subtle">
                 {role && <span className="capitalize">{role}</span>}
-                {role && provider && ' · '}
-                {provider}
               </div>
             </div>
-            <ChevronUp className="h-3.5 w-3.5 flex-shrink-0 text-fg-subtle" />
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-fg-muted transition hover:bg-bg-muted hover:text-fg"
+          >
+            <LogOut className="h-4 w-4" />
+            退出登录
           </button>
         </div>
       </aside>
 
-      {/* ========== 主内容区 ========== */}
+      {/* 主内容区 */}
       <main className="flex-1 overflow-y-auto bg-bg">
-        {/* 顶部 sticky bar */}
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-white/80 px-8 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-[13px] text-fg-muted">
-            <span className="font-medium text-fg">{getBreadcrumb(location.pathname)}</span>
-          </div>
+        {/* 顶部导航栏 */}
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-bg/80 px-8 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <button className="ui-btn ui-btn-ghost ui-btn-sm text-[12px]" type="button">
-              <BookOpen className="h-3.5 w-3.5" />
+            <h1 className="text-[15px] font-semibold text-fg">{getBreadcrumb(location.pathname)}</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] text-fg-muted transition hover:bg-bg-muted hover:text-fg" type="button">
+              <BookOpen className="h-4 w-4" />
               文档
             </button>
-            <div className="h-4 w-px bg-border" />
+            <div className="h-5 w-px bg-border" />
             <span className="ui-badge ui-badge-success">
               <span
                 className="ui-dot ui-dot-success"
                 style={{ width: 6, height: 6, boxShadow: 'none' }}
               />
-              dev
+              Production
             </span>
             <button
               type="button"
-              className="relative rounded-md p-1.5 text-fg-muted transition hover:bg-hover hover:text-fg"
+              className="relative rounded-lg p-2 text-fg-muted transition hover:bg-bg-muted hover:text-fg"
+              aria-label="设置"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="relative rounded-lg p-2 text-fg-muted transition hover:bg-bg-muted hover:text-fg"
               aria-label="通知"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-danger" />
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger" />
             </button>
           </div>
         </header>
 
-        {/* 路由出口：所有页面在 p-8 容器里渲染（与原型对齐） */}
+        {/* 路由出口 */}
         <div className="p-8">
           <Outlet />
         </div>
